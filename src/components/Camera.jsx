@@ -196,7 +196,7 @@ const Camera = ({ wsUrl /*, postUrl*/ }) => {
         <div className="p-4 rounded-2xl shadow">
             {!isStreaming && (
                 <div className="mb-3">
-                    <label className="block text-sm font-medium mb-1">Disallowed Items</label>
+                    <label className="block text-sm font-medium mb-1">Select Disallowed Items</label>
                     <select
                         multiple
                         value={selectedFilter}

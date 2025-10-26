@@ -7,6 +7,6 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 80,
-    allowedHosts: ['hack.austin.kim']
+    allowedHosts: ['hack.austin.kim', 'hack2.austin.kim']
   },
 })

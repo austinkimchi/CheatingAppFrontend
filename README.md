@@ -1,0 +1,2 @@
+# Cheating App Frontend
+This application displays a camera interface with bounding boxes of the detected cheating behaviors. It is built using React and communicates with a backend server for real-time detection.

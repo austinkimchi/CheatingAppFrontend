@@ -175,6 +175,11 @@ const Camera = ({ wsUrl /*, postUrl*/ }) => {
         if (videoRef.current) {
             videoRef.current.srcObject = null;
         }
+
+        // send user to report page with sessionId param
+        if (sessionId) {
+            window.location.href = `/report?sessionId=${sessionId}`;
+        }
     }
 
     function onFilterChange(e) {
@@ -214,7 +219,7 @@ const Camera = ({ wsUrl /*, postUrl*/ }) => {
                     onClick={isStreaming ? stop : start}
                     className={`px-4 py-2 rounded-xl ${isStreaming ? "bg-red-600" : "bg-black"}`}
                 >
-                    {isStreaming ? "Stop" : "Start"} Camera Stream
+                    {isStreaming ? "Stop/View Logs" : "Start Camera Stream"}
                 </button>
                 {error && <span className="text-red-600 text-sm">{error}</span>}
             </div>

@@ -28,7 +28,7 @@ async function fetchLogsCsv(sessionId) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`failed to fetch logs for ${sessionId} (${res.status})`);
   const data = await res.json();
-  if (!data || typeof data.log !== "string") throw new Error(`invalid logs response for ${sessionId}`);
+  if (!data || typeof data.log !== "string") throw new Error(`invalid logs response for ${session_id}`);
   return data.log;
 }
 
@@ -51,8 +51,23 @@ export default function Report() {
 
   const pollersRef = useRef({});
 
-  // Fetch sessions every 5s
+  // NEW: detect ?sessionId=... from the URL (query string)
+  const forcedSessionId = useMemo(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const v = sp.get("sessionId");
+    return v && v.trim() ? v.trim() : null;
+  }, []);
+
+  // Fetch sessions every 5s (SKIP if sessionId is forced)
   useEffect(() => {
+    if (forcedSessionId) {
+      // lock to the forced session id
+      setSessions([forcedSessionId]);
+      setLoadingSessions(false);
+      setErrorSessions(null);
+      return; // do not start the periodic /api/sessions fetcher
+    }
+
     let mounted = true;
     const load = async () => {
       setLoadingSessions(true);
@@ -69,10 +84,11 @@ export default function Report() {
     load();
     const t = setInterval(load, 5000);
     return () => { mounted = false; clearInterval(t); };
-  }, []);
+  }, [forcedSessionId]);
 
   // Poll logs per session every 10s
   useEffect(() => {
+    // clear removed sessions
     for (const sid of Object.keys(pollersRef.current)) {
       if (!sessions.includes(sid)) {
         const info = pollersRef.current[sid];
@@ -81,6 +97,7 @@ export default function Report() {
         delete pollersRef.current[sid];
       }
     }
+    // start pollers
     for (const sid of sessions) {
       if (pollersRef.current[sid]) continue;
       const abortCtrl = new AbortController();
@@ -108,14 +125,13 @@ export default function Report() {
     };
   }, [sessions]);
 
-  // --- Fullscreen viewer wiring ---
+  // Fullscreen viewer wiring
   const fsRef = useRef(null);
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") setViewer(null); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
-
   useEffect(() => {
     if (!viewer) {
       if (document.fullscreenElement) {
@@ -123,10 +139,9 @@ export default function Report() {
       }
       return;
     }
-    // try to enter fullscreen; ignore if blocked
     const el = fsRef.current;
     if (el && el.requestFullscreen) {
-    //   el.requestFullscreen().catch(() => {});
+      // el.requestFullscreen().catch(() => {});
     }
   }, [viewer]);
 
@@ -198,11 +213,21 @@ export default function Report() {
     <div className="p-4">
       <header className="mb-6">
         <h1 className="text-2xl font-bold">Reports</h1>
+
         <p className="text-sm text-neutral-600">
           Active sessions: <span className="font-semibold">{loadingSessions ? "…" : activeCount}</span>
         </p>
+
+        {/* If locked to a specific session via query param, show it */}
+        {forcedSessionId && (
+          <p className="text-xs text-neutral-600 mt-1">
+            Showing report for session&nbsp;<span className="font-mono">{forcedSessionId}</span>
+          </p>
+        )}
+
         {errorSessions && <p className="text-sm text-red-600 mt-1">Error: {errorSessions}</p>}
-        {!!sessions.length && (
+
+        {!forcedSessionId && !!sessions.length && (
           <p className="text-xs text-neutral-600 mt-1">
             {sessions.map((sid, i) => (
               <span key={sid} className="font-mono">
@@ -216,14 +241,12 @@ export default function Report() {
 
       {sessionCards}
 
-      {/* Fullscreen overlay viewer */}
       {viewer && (
         <div
           ref={fsRef}
           className="fixed inset-0 z-50 bg-black"
-          onClick={() => setViewer(null)}              // click anywhere to close
+          onClick={() => setViewer(null)}
         >
-          {/* Prevent close when clicking image container itself */}
           <div
             className="w-screen h-screen flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
@@ -233,7 +256,6 @@ export default function Report() {
               alt={viewer.image}
               className="max-w-[98vw] max-h-[98vh] object-contain"
             />
-            {/* Close “X” in corner */}
             <button
               className="absolute top-4 right-4 px-3 py-1 rounded-lg bg-white/10 border border-white/30"
               onClick={() => setViewer(null)}

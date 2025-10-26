@@ -1,5 +1,5 @@
 import './App.css'
-import Camera from './components/camera'
+import Camera from './components/Camera'
 import Report from './components/Report'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 

@@ -11,7 +11,7 @@ const Camera = ({ wsUrl /*, postUrl*/ }) => {
     const [error, setError] = useState(null);
     const [facingMode, setFacingMode] = useState("environment"); // "environment" or "user"
     const [sessionId, setSessionId] = useState(null);
-    const ALL_ITEMS = ["Phone", "Laptop", "Pen", "Beverages", "Calculator", "Notebook"];
+    const ALL_ITEMS = ["Phone", "Laptop", "Pen", "Beverages", "Calculator"];
     const [selectedFilter, setSelectedFilter] = useState([]);
     const [hasSentFilter, setHasSentFilter] = useState(false);
 
